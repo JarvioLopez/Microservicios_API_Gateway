@@ -1,0 +1,39 @@
+services:
+  usuarios-service:
+    build:
+      context: ./usuarios-service
+    container_name: microservicio-usuarios
+    ports:
+      - "8001:8001"
+    networks:
+      - microservicios-network
+
+  pedidos-service:
+    build:
+      context: ./pedidos-service
+    container_name: microservicio-pedidos
+    ports:
+      - "8002:8002"
+    environment:
+      USUARIOS_SERVICE_URL: http://usuarios-service:8001
+    depends_on:
+      - usuarios-service
+    networks:
+      - microservicios-network
+
+  api-gateway:
+    image: nginx:alpine
+    container_name: microservicios-gateway
+    ports:
+      - "8085:80"
+    volumes:
+      - ./api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - usuarios-service
+      - pedidos-service
+    networks:
+      - microservicios-network
+
+networks:
+  microservicios-network:
+    driver: bridge
